@@ -1,0 +1,17 @@
+# put packages for pip to install here
+
+# here's all of aiohttp[speedups], which is a pretty good async http server
+aiodns==3.0.0
+aiohttp==3.7.4.post0
+async-timeout==3.0.1
+attrs==21.2.0
+brotlipy==0.7.0
+cchardet==2.1.7
+cffi==1.14.6
+chardet==4.0.0
+idna==3.2
+multidict==5.1.0
+pycares==4.0.0
+pycparser==2.20
+typing-extensions==3.10.0.2
+yarl==1.6.3
