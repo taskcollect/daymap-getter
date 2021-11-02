@@ -5,26 +5,12 @@ import requests
 import requests_ntlm
 import lxml.html
 
+from daymap.errors import InvalidCredentials, OurFault, ServerFault
+
 URL_ROOT = 'https://daymap.gihs.sa.edu.au'
 URL_DAYPLAN = f'{URL_ROOT}/daymap/student/dayplan.aspx'
 URL_SLASHDAYMAP = f'{URL_ROOT}/Daymap/'
 URL_DAYMAPIDENTITY = f'{URL_ROOT}/DaymapIdentity/was/client'
-
-
-# exception for when daymap messed up
-class ServerFault(Exception):
-    def __init__(self, *args: object) -> None:
-        super().__init__(*args)
-
-# something unexpected happened, daymap's api probably changed ;-;
-class OurFault(Exception):
-    def __init__(self, *args: object) -> None:
-        super().__init__(*args)
-
-# the user just didn't enter the correct credentials, what can ya do?
-class InvalidCredentials(Exception):
-    def __init__(self, *args: object) -> None:
-        super().__init__(*args)
 
 # request a resource
 # either provide session and no user/pass or the opposite
@@ -40,7 +26,14 @@ def get_daymap_resource(
     elif len(session.cookies) > 0:
         # this cookie jar has some cookies, maybe try to do a fast auth
         try:
-            return session.get(url), session
+            r = session.get(url)
+            
+            print(r.text)
+
+            if '<title>Daymap Login</title>' in r.text:
+                raise InvalidCredentials()
+    
+            return r, session
         except:
             # nope, that went horribly wrong, I guess we need to auth after all
             # also make a new session while we're at it

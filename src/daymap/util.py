@@ -31,7 +31,6 @@ def get_all_lessons_and_clean(
     ) # (no need to try/except here, just let it raise naturally)
 
     rawlessons = resp.json()
-
     # process the lesson objects
     cleanlessons = [
         daymap.clean.clean_lesson_object(l) for l in rawlessons

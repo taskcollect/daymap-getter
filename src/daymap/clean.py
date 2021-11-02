@@ -17,10 +17,10 @@ def clean_lesson_object(l: dict) -> dict:
         "finish": int(clean_daymap_date(l["Finish"]).timestamp()),
         "attendance": l["AttendanceStatus"],
         "resources": l["HasResources"],
-        "links": (get_links_from_html(l["Text"]) if l["Text"] != "" else None)
+        "links": (get_links_from_planopen(l["Text"]) if l["Text"] != "" else None)
     }
 
-def get_links_from_html(s: str) -> List[dict]:
+def get_links_from_planopen(s: str) -> List[dict]:
     tree = lxml.html.fromstring(s)
     # get all inputs
     anchors: List[lxml.html.HtmlElement] = tree.xpath('//a')
