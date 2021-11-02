@@ -28,8 +28,6 @@ def get_daymap_resource(
         try:
             r = session.get(url)
             
-            print(r.text)
-
             if '<title>Daymap Login</title>' in r.text:
                 raise InvalidCredentials()
     
