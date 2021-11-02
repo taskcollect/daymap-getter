@@ -5,7 +5,7 @@ import requests
 import requests_ntlm
 import lxml.html
 
-from daymap.errors import InvalidCredentials, OurFault, ServerFault
+from daymap.errors import DaymapException, InvalidCredentials, OurFault, ServerFault
 
 URL_ROOT = 'https://daymap.gihs.sa.edu.au'
 URL_DAYPLAN = f'{URL_ROOT}/daymap/student/dayplan.aspx'
@@ -15,6 +15,8 @@ URL_DAYMAPIDENTITY = f'{URL_ROOT}/DaymapIdentity/was/client'
 # request a resource
 # either provide session and no user/pass or the opposite
 # pass blank url to get /Daymap
+
+
 def get_daymap_resource(
     url: str,
     session: requests.Session = None,
@@ -27,19 +29,20 @@ def get_daymap_resource(
         # this cookie jar has some cookies, maybe try to do a fast auth
         try:
             r = session.get(url)
-            
+
             if '<title>Daymap Login</title>' in r.text:
                 raise InvalidCredentials()
-    
+            elif r.status_code != 200:
+                raise InvalidCredentials()
+
             return r, session
-        except:
+        except DaymapException:
             # nope, that went horribly wrong, I guess we need to auth after all
             # also make a new session while we're at it
             session = requests.Session()
 
     if username is None or password is None:
-        raise InvalidCredentials("missing user or password; fast auth not possible")
-    
+        raise InvalidCredentials("missing user or password and fast auth not possible")
 
     resp1 = session.get(URL_DAYPLAN)
     signin_id = resp1.url.split('?signin=')[-1]
@@ -65,9 +68,8 @@ def get_daymap_resource(
             f"probably unauthorized, stage 2 code was {rcode}")
 
     if ('<form method="POST"' not in resp2.text):
-        raise OurFault(
-            f"weird return in stage 2, got code 200 but no form to post")
-            
+        raise OurFault("weird return in stage 2, got code 200 but no form to post")
+
     # parse the html from stage 2's content
     s3_tree = lxml.html.fromstring(resp2.content)
     # get all inputs that aren't type submit
@@ -95,5 +97,5 @@ def get_daymap_resource(
 
     if url == "":
         return final, session
-    
+
     return session.get(url), session

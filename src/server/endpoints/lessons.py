@@ -1,11 +1,12 @@
 import asyncio
 import datetime
 import json
-from aiohttp import web
-import requests
 import traceback
-from daymap.errors import DaymapException
 
+import requests
+from aiohttp import web
+
+from daymap.errors import DaymapException
 from daymap.util import get_all_lessons_and_clean
 
 
@@ -24,8 +25,8 @@ async def endpoint_lessons(req: web.Request) -> web.Response:
     try:
         data = await req.json()
 
-        if type(data) != dict:
-            raise "not a dict"
+        if isinstance(data, dict):
+            raise ValueError("not a dict")
 
         data: dict
 
@@ -51,7 +52,7 @@ async def endpoint_lessons(req: web.Request) -> web.Response:
             session = requests.Session()
             session.cookies = jar
         elif password is None:
-            raise "no password or cookies"
+            raise ValueError("no password or cookies")
 
     except Exception as e:
         traceback.print_exception(type(e), e, e.__traceback__)
@@ -63,8 +64,8 @@ async def endpoint_lessons(req: web.Request) -> web.Response:
         return get_all_lessons_and_clean(
             start=start_date,
             end=end_date,
-            username=username, 
-            session=session, 
+            username=username,
+            session=session,
             password=password,
         )
 
@@ -78,7 +79,7 @@ async def endpoint_lessons(req: web.Request) -> web.Response:
         traceback.print_exception(type(e), e, e.__traceback__)
         return web.Response(status=500)
 
-    out = { "data": lessons }
+    out = {"data": lessons}
 
     if cookies is None:
         # give back cookies if none received

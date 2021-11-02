@@ -1,11 +1,11 @@
+import datetime
 from typing import Dict, List, Tuple
 
 from requests.sessions import Session
-import datetime
 
+import daymap.clean
 # daymap modules
 import daymap.net
-import daymap.clean
 
 LESSON_URL = 'https://daymap.gihs.sa.edu.au/daymap/DWS/Diary.ashx?cmd=EventList&from={0}&to={1}'
 
