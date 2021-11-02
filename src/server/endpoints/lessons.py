@@ -81,7 +81,8 @@ async def endpoint_lessons(req: web.Request) -> web.Response:
 
     out = {"data": lessons}
 
-    if cookies is None:
+    # if no cookies were provided or the cookies were renewed, give them back
+    if cookies is None or cookies != session.cookies:
         # give back cookies if none received
         out["cookies"] = session.cookies.get_dict()
 
