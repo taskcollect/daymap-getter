@@ -17,20 +17,23 @@ URL_DAYMAPIDENTITY = f'{URL_ROOT}/DaymapIdentity/was/client'
 # pass blank url to get /Daymap
 
 
-def get_daymap_resource(
+def request_daymap_resource(
     url: str,
+    method: str = "GET",
     session: requests.Session = None,
     username: str = None,
     password: str = None,
+    payload = None,
+    headers = None,
 ) -> Tuple[requests.Response, requests.Session]:
     if session is None:
         session = requests.Session()
     elif len(session.cookies) > 0:
         # this cookie jar has some cookies, maybe try to do a fast auth
         try:
-            r = session.get(url)
+            r = session.request(method=method, url=url, data=payload, headers=headers)
 
-            if '<title>Daymap Login</title>' in r.text:
+            if '<title>Daymap Login</title>' in r.text or '<title>Submit this form</title>' in r.text:
                 raise InvalidCredentials()
             elif r.status_code != 200:
                 raise InvalidCredentials()
@@ -98,4 +101,4 @@ def get_daymap_resource(
     if url == "":
         return final, session
 
-    return session.get(url), session
+    return session.request(method=method, url=url, data=payload, headers=headers), session

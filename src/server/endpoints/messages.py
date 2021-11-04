@@ -1,3 +1,5 @@
+# HTTP endpoints for messages
+
 import asyncio
 import datetime
 import json
@@ -7,14 +9,10 @@ import requests
 from aiohttp import web
 
 from daymap.errors import DaymapException
-from daymap.lessons import get_all_lessons_and_clean
+import daymap.messages
 
-
-async def endpoint_lessons(req: web.Request) -> web.Response:
-
-    start_date: datetime.datetime = None
-    end_date: datetime.datetime = None
-
+# get the username and password from the request json, then query daymap, and return it as a json array
+async def endpoint_messages(req: web.Request) -> web.Response:
     username: str = None
     password: str = None
 
@@ -29,14 +27,6 @@ async def endpoint_lessons(req: web.Request) -> web.Response:
             raise ValueError("not a dict")
 
         data: dict
-
-        start_date = datetime.datetime.utcfromtimestamp(
-            int(data['from'])
-        )
-
-        end_date = datetime.datetime.utcfromtimestamp(
-            int(data['to'])
-        )
 
         username = data['username']
         password = data.get('password')
@@ -61,13 +51,7 @@ async def endpoint_lessons(req: web.Request) -> web.Response:
     loop = asyncio.get_event_loop()
 
     def _get():
-        return get_all_lessons_and_clean(
-            start=start_date,
-            end=end_date,
-            username=username,
-            session=session,
-            password=password,
-        )
+        return daymap.messages.get_messages(username, password, session)
 
     try:
         lessons, session = await loop.run_in_executor(None, _get)
