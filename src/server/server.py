@@ -10,6 +10,7 @@ from aiohttp import web
 
 from server.endpoints.lessons import endpoint_lessons
 from server.endpoints.messages import endpoint_messages
+from server.endpoints.tasks import endpoint_tasks_current
 from server.errors import GracefulExitException, ResetException
 
 def handle_sighup() -> None:
@@ -38,6 +39,7 @@ def run_app() -> bool:
     web_app = web.Application()
     web_app.router.add_get("/lessons", endpoint_lessons)
     web_app.router.add_get("/messages", endpoint_messages)
+    web_app.router.add_get("/tasks", endpoint_tasks_current)
 
     try:
         web.run_app(web_app, handle_signals=True)

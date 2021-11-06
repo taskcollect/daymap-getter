@@ -3,6 +3,7 @@ import requests
 import daymap.net
 import lxml.html
 
+MESSAGES_URL = "https://daymap.gihs.sa.edu.au/daymap/coms/search.aspx/Search"
 
 def request_message_html(
     username: str,
@@ -10,7 +11,7 @@ def request_message_html(
     session: requests.Session = None
 ):
     r, s = daymap.net.request_daymap_resource(
-        "https://daymap.gihs.sa.edu.au/daymap/coms/search.aspx/Search",
+        url=MESSAGES_URL,
         method="POST",
         username=username,
         password=password,
@@ -59,4 +60,4 @@ def get_messages(username: str, password: str = None, session: requests.Session 
         session=session
     )
 
-    return parse_message_html(html=html), session
+    return parse_message_html(html), session
