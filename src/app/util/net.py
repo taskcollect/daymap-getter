@@ -1,11 +1,11 @@
 
 from typing import Tuple
 
+import lxml.html
 import requests
 import requests_ntlm
-import lxml.html
 
-from daymap.errors import DaymapException, InvalidCredentials, OurFault, ServerFault
+from .errors import DaymapException, InvalidCredentials, OurFault, ServerFault
 
 URL_ROOT = 'https://daymap.gihs.sa.edu.au'
 URL_DAYPLAN = f'{URL_ROOT}/daymap/student/dayplan.aspx'
@@ -23,15 +23,16 @@ def request_daymap_resource(
     session: requests.Session = None,
     username: str = None,
     password: str = None,
-    payload = None,
-    headers = None,
+    payload=None,
+    headers=None,
 ) -> Tuple[requests.Response, requests.Session]:
     if session is None:
         session = requests.Session()
     elif len(session.cookies) > 0:
         # this cookie jar has some cookies, maybe try to do a fast auth
         try:
-            r = session.request(method=method, url=url, data=payload, headers=headers)
+            r = session.request(method=method, url=url,
+                                data=payload, headers=headers)
 
             if '<title>Daymap Login</title>' in r.text or '<title>Submit this form</title>' in r.text:
                 raise InvalidCredentials()
@@ -45,7 +46,8 @@ def request_daymap_resource(
             session = requests.Session()
 
     if username is None or password is None:
-        raise InvalidCredentials("missing user or password and fast auth not possible")
+        raise InvalidCredentials(
+            "missing user or password and fast auth not possible")
 
     resp1 = session.get(URL_DAYPLAN)
     signin_id = resp1.url.split('?signin=')[-1]
@@ -71,7 +73,8 @@ def request_daymap_resource(
             f"probably unauthorized, stage 2 code was {rcode}")
 
     if ('<form method="POST"' not in resp2.text):
-        raise OurFault("weird return in stage 2, got code 200 but no form to post")
+        raise OurFault(
+            "weird return in stage 2, got code 200 but no form to post")
 
     # parse the html from stage 2's content
     s3_tree = lxml.html.fromstring(resp2.content)
@@ -84,7 +87,8 @@ def request_daymap_resource(
     resp3 = session.post(URL_DAYMAPIDENTITY, data=post_payload)
 
     if '<form' not in resp3.text:
-        raise OurFault("weird return in stage 3, no form after post of stage 2 form")
+        raise OurFault(
+            "weird return in stage 3, no form after post of stage 2 form")
 
     # parse the html from stage 3's content
     s4_tree = lxml.html.fromstring(resp3.content)
@@ -96,7 +100,8 @@ def request_daymap_resource(
     # send it to /Daymap
     final = session.post(URL_SLASHDAYMAP, data=post_payload)
     if final.status_code != 200:
-        raise OurFault(f"non 200 status code in final POST stage: {final.status_code}")
+        raise OurFault(
+            f"non 200 status code in final POST stage: {final.status_code}")
 
     if url == "":
         return final, session

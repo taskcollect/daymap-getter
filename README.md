@@ -3,15 +3,17 @@
 ---
 ## HTTP Spec
 
-* GET `/lessons`
+Note: If you're accessing an endpoint, access it with `/` at the end. It skips an unnecessary redirect!
+
+* POST `/lessons/`
     
     *Gets all lessons for the user in the defined time range.*
     * JSON Payload:
         
         Always contains:
         * `username` (string) The person's username.
-        * `from` (UTC Unix Timestamp) Start date for queried lesson range (time is ignored)
-        * `to` (UTC Unix Timestamp) End date for queried lesson range (time is ignored)
+        * `start` (UTC Unix Timestamp) Start date for queried lesson range (time is ignored)
+        * `end` (UTC Unix Timestamp) End date for queried lesson range (time is ignored)
 
         Then, either:
         * `password` (string) The person's password, in plaintext.
@@ -91,7 +93,7 @@
         }
         ```
 
-* GET `/messages`
+* POST `/messages/`
     
     *Gets all messages for the user, ever.*
     * JSON Payload:
@@ -161,7 +163,7 @@
         }
         ```
 
-* GET `/tasks`
+* POST `/tasks/`
     
     *Gets all current tasks for the user.*
     * JSON Payload:

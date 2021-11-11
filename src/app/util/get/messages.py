@@ -1,16 +1,19 @@
 from typing import List, Tuple
-import requests
-import daymap.net
+
 import lxml.html
+import requests
+
+from ..net import request_daymap_resource
 
 MESSAGES_URL = "https://daymap.gihs.sa.edu.au/daymap/coms/search.aspx/Search"
+
 
 def request_message_html(
     username: str,
     password: str = None,
     session: requests.Session = None
 ):
-    r, s = daymap.net.request_daymap_resource(
+    r, s = request_daymap_resource(
         url=MESSAGES_URL,
         method="POST",
         username=username,
@@ -21,7 +24,7 @@ def request_message_html(
             "Content-Type": "application/json; charset=UTF-8"
         }
     )
-    
+
     return r.json()['d'], s
 
 

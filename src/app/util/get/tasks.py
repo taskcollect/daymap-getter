@@ -4,7 +4,7 @@ from typing import Dict, List, Tuple
 import lxml.html
 import requests
 
-import daymap.net
+from ..net import request_daymap_resource
 
 TASKS_URL = "https://daymap.gihs.sa.edu.au/daymap/student/portfolio.aspx/CurrentTaskList"
 
@@ -105,7 +105,7 @@ def request_tasks_html(
     password: str = None,
     session: requests.Session = None
 ):
-    r, s = daymap.net.request_daymap_resource(
+    r, s = request_daymap_resource(
         url=TASKS_URL,
         method="POST",
         username=username,
@@ -137,6 +137,7 @@ def parse_tasks_html(html: str) -> List[Dict]:
             )
 
     return out
+
 
 def get_tasks(username: str, password: str = None, session: requests.Session = None) -> Tuple[List[dict], requests.Session]:
     html, session = request_tasks_html(

@@ -1,12 +1,11 @@
-import lxml.html
-from typing import List
 import datetime
 from typing import Dict, List, Tuple
 
+import lxml.html
 from requests.sessions import Session
 
 # daymap modules
-import daymap.net
+from ..net import request_daymap_resource
 
 LESSON_URL = 'https://daymap.gihs.sa.edu.au/daymap/DWS/Diary.ashx?cmd=EventList&from={0}&to={1}'
 
@@ -38,22 +37,27 @@ def get_links_from_planopen(s: str) -> List[dict]:
 
     out = []
     for a in anchors:
-        plan_id, event_id = a.attrib['href'].lstrip(
-            "javascript:planOpen(").rstrip(");").split(",")
-        out.append({
-            "label": a.text,
-            "planId": int(plan_id),
-            "eventId": int(event_id)
-        })
+        try:
+            plan_id, event_id = a.attrib['href'].lstrip(
+                "javascript:planOpen(").rstrip(");").split(",")
+
+            out.append({
+                "label": a.text,
+                "planId": int(plan_id),
+                "eventId": int(event_id)
+            })
+        except:
+            # FIXME: fix this
+            pass
     return out
 
 
-def get_all_lessons_and_clean(
+def get_lessons(
     start: datetime.date,
     end: datetime.date,
     username: str,
+    password: str = None,
     session=None,
-    password: str = None
 ) -> Tuple[List[Dict], Session]:
     # construct url base
     url = LESSON_URL.format(
@@ -62,7 +66,7 @@ def get_all_lessons_and_clean(
     )
 
     # request the url
-    resp, session = daymap.net.request_daymap_resource(
+    resp, session = request_daymap_resource(
         url=url,
         username=username,
         session=session,
