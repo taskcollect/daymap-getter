@@ -1,18 +1,20 @@
-# HTTP endpoints for tasks
+# HTTP endpoints for messages
 
-import asyncio
-import datetime
-import json
 import traceback
 
+from flask import request, jsonify, Blueprint
+
 import requests
-from aiohttp import web
 
 from daymap.errors import DaymapException
-import daymap.tasks
+import daymap.messages
+from util import preprocess_json
 
-# get the username and password from the request json, then query daymap, and return it as a json array
-async def endpoint_tasks_current(req: web.Request) -> web.Response:
+blueprint = Blueprint("messages", __name__)
+
+
+@blueprint.route('/messages', methods=['GET'])
+def endpoint_messages():
     username: str = None
     password: str = None
 
@@ -21,7 +23,7 @@ async def endpoint_tasks_current(req: web.Request) -> web.Response:
     session: requests.Session = None
 
     try:
-        data = await req.json()
+        data = preprocess_json(request.data.decode('utf-8'))
 
         if not isinstance(data, dict):
             raise ValueError("not a dict")
@@ -46,29 +48,24 @@ async def endpoint_tasks_current(req: web.Request) -> web.Response:
 
     except Exception as e:
         traceback.print_exception(type(e), e, e.__traceback__)
-        return web.Response(status=400, text="invalid json")
-
-    loop = asyncio.get_event_loop()
-
-    def _get():
-        return daymap.tasks.get_tasks(username, password, session)
+        return "invalid json", 400
 
     try:
-        tasks, session = await loop.run_in_executor(None, _get)
+        lessons, session = daymap.messages.get_messages(
+            username, password, session)
     except Exception as e:
         if isinstance(e, DaymapException):
-            return web.Response(status=int(e))
+            return '', int(e)
 
         # it's not a daymap parser error?
         traceback.print_exception(type(e), e, e.__traceback__)
-        return web.Response(status=500)
+        return '', 500
 
-    out = {"data": tasks}
+    out = {"data": lessons}
 
     # if no cookies were provided or the cookies were renewed, give them back
     if cookies is None or cookies != session.cookies:
         # give back cookies if none received
         out["cookies"] = session.cookies.get_dict()
 
-    body_out = json.dumps(out)
-    return web.Response(body=body_out)
+    return jsonify(out)

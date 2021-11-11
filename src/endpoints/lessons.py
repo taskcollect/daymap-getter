@@ -1,18 +1,27 @@
-# HTTP endpoints for messages
-
 import asyncio
 import datetime
 import json
 import traceback
+from flask import blueprints
+from flask.blueprints import Blueprint
 
 import requests
-from aiohttp import web
 
 from daymap.errors import DaymapException
-import daymap.messages
+from daymap.lessons import get_all_lessons_and_clean
 
-# get the username and password from the request json, then query daymap, and return it as a json array
-async def endpoint_messages(req: web.Request) -> web.Response:
+from flask import request, jsonify
+
+from util import preprocess_json
+
+blueprint = Blueprint("lessons", __name__)
+
+
+@blueprint.route('/lessons', methods=['GET'])
+def endpoint_lessons():
+    start_date: datetime.datetime = None
+    end_date: datetime.datetime = None
+
     username: str = None
     password: str = None
 
@@ -21,12 +30,20 @@ async def endpoint_messages(req: web.Request) -> web.Response:
     session: requests.Session = None
 
     try:
-        data = await req.json()
+        data = preprocess_json(request.data.decode('utf-8'))
 
         if not isinstance(data, dict):
             raise ValueError("not a dict")
 
         data: dict
+
+        start_date = datetime.datetime.utcfromtimestamp(
+            int(data['from'])
+        )
+
+        end_date = datetime.datetime.utcfromtimestamp(
+            int(data['to'])
+        )
 
         username = data['username']
         password = data.get('password')
@@ -46,22 +63,23 @@ async def endpoint_messages(req: web.Request) -> web.Response:
 
     except Exception as e:
         traceback.print_exception(type(e), e, e.__traceback__)
-        return web.Response(status=400, text="invalid json")
-
-    loop = asyncio.get_event_loop()
-
-    def _get():
-        return daymap.messages.get_messages(username, password, session)
+        return 'invalid json', 400
 
     try:
-        lessons, session = await loop.run_in_executor(None, _get)
+        lessons, session = get_all_lessons_and_clean(
+            start=start_date,
+            end=end_date,
+            username=username,
+            session=session,
+            password=password,
+        )
     except Exception as e:
         if isinstance(e, DaymapException):
-            return web.Response(status=int(e))
+            return '', int(e)
 
         # it's not a daymap parser error?
         traceback.print_exception(type(e), e, e.__traceback__)
-        return web.Response(status=500)
+        return '', 500
 
     out = {"data": lessons}
 
@@ -70,5 +88,4 @@ async def endpoint_messages(req: web.Request) -> web.Response:
         # give back cookies if none received
         out["cookies"] = session.cookies.get_dict()
 
-    body_out = json.dumps(out)
-    return web.Response(body=body_out)
+    return jsonify(out)
