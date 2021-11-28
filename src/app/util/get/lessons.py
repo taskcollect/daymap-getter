@@ -25,31 +25,7 @@ def clean_lesson_object(l: dict) -> dict:
         "start": int(clean_daymap_date(l["Start"]).timestamp()),
         "finish": int(clean_daymap_date(l["Finish"]).timestamp()),
         "attendance": l["AttendanceStatus"],
-        "resources": l["HasResources"],
-        "links": (get_links_from_planopen(l["Text"]) if l["Text"] != "" else None)
     }
-
-
-def get_links_from_planopen(s: str) -> List[dict]:
-    tree = lxml.html.fromstring(s)
-    # get all inputs
-    anchors: List[lxml.html.HtmlElement] = tree.xpath('//a')
-
-    out = []
-    for a in anchors:
-        try:
-            plan_id, event_id = a.attrib['href'].lstrip(
-                "javascript:planOpen(").rstrip(");").split(",")
-
-            out.append({
-                "label": a.text,
-                "planId": int(plan_id),
-                "eventId": int(event_id)
-            })
-        except:
-            # FIXME: fix this
-            pass
-    return out
 
 
 def get_lessons(

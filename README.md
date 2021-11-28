@@ -48,17 +48,7 @@ Note: If you're accessing an endpoint, access it with `/` at the end. It skips a
                     "id": 12345678, // Daymap internal id
                     "start": 1234567890, // unix timestamp
                     "finish": 9876543210, // unix timestamp
-                    "attendance": "NotSet", // Daymap attendance enum
-                    "resources": false,
-                    "links": [ 
-                        // any material links teacher set
-                        {
-                            "label": "some plan",
-                            // these ID's allow content to be fetched
-                            "planId": 123456,
-                            "eventId": 654321
-                        }
-                    ]
+                    "attendance": "NotSet" // Daymap attendance enum
                 },
                 { /* another lesson */ },
                 { /* another lesson */ }
@@ -89,6 +79,90 @@ Note: If you're accessing an endpoint, access it with `/` at the end. It skips a
                 { /* lesson */ },
                 { /* lesson */ }
             ]
+            // notice how no cookies are returned if the passed ones are valid
+        }
+        ```
+
+* POST `/lessons/plans/`
+    
+    *Gets lesson plans for a lesson.*
+    * JSON Payload:
+        
+        Always contains:
+        * `username` (string) The person's username.
+        * `lesson_id` (int) The ID of the lesson to query plans for.
+
+        Then, either:
+        * `password` (string) The person's password, in plaintext.
+        *This variant should be used if no session cookies have been stored on the server. It takes about 3x as long to complete a request because of all the authentication that has to occur with Daymap.*
+    
+        Or:
+        * `cookies` (object) Daymap's session cookies in a JSON object (key-value pair)
+        *This *
+    * Returns:
+        * 200 OK - Plan query successful
+        * 402 Bad Gateway - Daymap didn't respond properly
+        * 400 Bad Request - JSON Payload was invalid
+
+        <br>
+
+        **Example request with user/pass combo:**
+        ```jsonc
+        {
+            "username": "someuser",
+            "password": "PlaintextPassword",
+            "lesson_id": 123456
+        }
+        ```
+        Response:
+        ```jsonc
+        {
+            "data": {
+                "notes": [
+                    {
+                        // fields can disappear from here if they're not set in daymap
+                        "title": "Note Title",
+                        "content": "Blah blah blah, we're doing learning today...",
+                        "links": {
+                            // links fished out from content
+                            "Video You Should Watch": "https://youtube.com/(something)",
+                        },
+                        "files": {
+                            // this is a daymap attachment id, a download url can be constructed using it
+                            "CoolDocument.docx": 123456
+                        }
+                    },
+                    { /* another note on same lesson */ },
+                    { /* another note on same lesson */ },
+                ],
+                "extra_files": {
+                    // files not belonging to any specific note, just placed out in the void
+                    "ExtraDocument.pdf": 111222
+                }
+            },
+            "cookies": {
+                // Daymap identity cookies, keep these
+                "name": "value"
+            }
+        }
+        ```
+
+        **Example request with cookies:**
+        ```jsonc
+        {
+            "username": "someuser",
+            "cookies": {
+                /* Daymap identity cookies */
+            },
+            "lesson_id": 123456
+        }
+        ```
+        Response:
+        ```jsonc
+        {
+            "data": { 
+                /* same as above */
+            }
             // notice how no cookies are returned if the passed ones are valid
         }
         ```
